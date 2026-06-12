@@ -1,6 +1,6 @@
 package com.shopsphere.user.pattern;
 
-import com.shopsphere.common.dto.UserDTO;
+// import com.shopsphere.common.dto.UserDTO;
 import com.shopsphere.user.entity.User;
 
 // Builder Pattern - for creating User objects with flexible construction
