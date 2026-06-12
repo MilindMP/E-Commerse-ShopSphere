@@ -10,6 +10,7 @@ public class UserDTOFactory {
                 user.getUserId(),
                 user.getEmail(),
                 user.getUsername(),
+                user.getPassword(),
                 user.getFirstname(),
                 user.getLastname(),
                 user.getPhone(),

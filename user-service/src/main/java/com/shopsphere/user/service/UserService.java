@@ -33,8 +33,8 @@ public class UserService {
     // private static final String USER_CACHE_PREFIX = "user:";
     // private static final long CACHE_EXPIRATION_MINUTES = 30;
 
-    @CircuitBreaker(name = "userService", fallbackMethod = "getUserFallback")
-    @Retry(name = "userService")
+    // @CircuitBreaker(name = "userService", fallbackMethod = "getUserFallback")
+    // @Retry(name = "userService")
     public UserDTO createUser(UserDTO userDTO) {
 
         log.info("Creating user with email: {}", userDTO.getEmail());
@@ -95,8 +95,13 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        if (!passwordEncodingStrategy.matches(password, user.getPassword())) {
-            throw new BusinessException("Invalid credentials");
+        // if (!passwordEncodingStrategy.matches(password, user.getPassword())) {
+        // throw new BusinessException("Invalid credentials");
+        // }
+        if (!passwordEncodingStrategy.matches(
+                password,
+                user.getPassword())) {
+            throw new BusinessException("Invalid password");
         }
 
         return jwtTokenProvider.generateToken(

@@ -32,9 +32,9 @@ eureka:
 app:
   security:
     jwt:
-      secret: your-secret-key-make-it-long-and-secure-at-least-32-characters
+      secret: mySuperSecretJwtKeyForShopSphereMicroservicesProject2026SecureTokenGeneration123456789
       expiration: 3600000
-      refresh-token-secret: your-refresh-token-secret-key-make-it-long-and-secure
+      refresh-token-secret: mySuperSecretJwtKeyForShopSphereMicroservicesProject2026SecureTokenGeneration123456789
       refresh-token-expiration: 604800000
 
 resilience4j:
