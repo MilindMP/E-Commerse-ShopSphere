@@ -1,0 +1,425 @@
+version: '3.9'
+
+services:
+  # MySQL Databases for each service
+  mysql-user-db:
+    image: mysql:8.0
+    container_name: mysql_user_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopsphere_user_db
+    ports:
+      - "3306:3306"
+    networks:
+      - shopsphere-network
+    volumes:
+      - mysql_user_db_volume:/var/lib/mysql
+
+  mysql-product-db:
+    image: mysql:8.0
+    container_name: mysql_product_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopsphere_product_db
+    ports:
+      - "3307:3306"
+    networks:
+      - shopsphere-network
+    volumes:
+      - mysql_product_db_volume:/var/lib/mysql
+
+  mysql-order-db:
+    image: mysql:8.0
+    container_name: mysql_order_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopsphere_order_db
+    ports:
+      - "3308:3306"
+    networks:
+      - shopsphere-network
+    volumes:
+      - mysql_order_db_volume:/var/lib/mysql
+
+  mysql-payment-db:
+    image: mysql:8.0
+    container_name: mysql_payment_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopsphere_payment_db
+    ports:
+      - "3309:3306"
+    networks:
+      - shopsphere-network
+    volumes:
+      - mysql_payment_db_volume:/var/lib/mysql
+
+  mysql-inventory-db:
+    image: mysql:8.0
+    container_name: mysql_inventory_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopsphere_inventory_db
+    ports:
+      - "3310:3306"
+    networks:
+      - shopsphere-network
+    volumes:
+      - mysql_inventory_db_volume:/var/lib/mysql
+
+  mysql-review-db:
+    image: mysql:8.0
+    container_name: mysql_review_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shopsphere_review_db
+    ports:
+      - "3311:3306"
+    networks:
+      - shopsphere-network
+    volumes:
+      - mysql_review_db_volume:/var/lib/mysql
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: shopsphere_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - shopsphere-network
+    volumes:
+      - redis_volume:/data
+
+  # Apache Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - shopsphere-network
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9101:9101"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - shopsphere-network
+
+  # Service Discovery - Eureka Server
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka_server
+    ports:
+      - "8761:8761"
+    environment:
+      eureka.instance.hostname: eureka-server
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - redis
+      - kafka
+
+  # Configuration Server
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config_server
+    ports:
+      - "8888:8888"
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - eureka-server
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+      spring.redis.host: redis
+      spring.redis.port: 6379
+    networks:
+      - shopsphere-network
+    depends_on:
+      - eureka-server
+      - redis
+
+  # Microservices
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user_service
+    ports:
+      - "8001:8001"
+    environment:
+      spring.datasource.url: jdbc:mysql://mysql-user-db:3306/shopsphere_user_db
+      spring.datasource.username: root
+      spring.datasource.password: root
+      spring.data.redis.host: redis
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - mysql-user-db
+      - redis
+      - eureka-server
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product_service
+    ports:
+      - "8002:8002"
+    environment:
+      spring.datasource.url: jdbc:mysql://mysql-product-db:3306/shopsphere_product_db
+      spring.datasource.username: root
+      spring.datasource.password: root
+      spring.data.redis.host: redis
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - mysql-product-db
+      - redis
+      - eureka-server
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order_service
+    ports:
+      - "8003:8003"
+    environment:
+      spring.datasource.url: jdbc:mysql://mysql-order-db:3306/shopsphere_order_db
+      spring.datasource.username: root
+      spring.datasource.password: root
+      spring.kafka.bootstrap-servers: kafka:29092
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - mysql-order-db
+      - kafka
+      - eureka-server
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    container_name: payment_service
+    ports:
+      - "8004:8004"
+    environment:
+      spring.datasource.url: jdbc:mysql://mysql-payment-db:3306/shopsphere_payment_db
+      spring.datasource.username: root
+      spring.datasource.password: root
+      spring.kafka.bootstrap-servers: kafka:29092
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - mysql-payment-db
+      - kafka
+      - eureka-server
+
+  inventory-service:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    container_name: inventory_service
+    ports:
+      - "8005:8005"
+    environment:
+      spring.datasource.url: jdbc:mysql://mysql-inventory-db:3306/shopsphere_inventory_db
+      spring.datasource.username: root
+      spring.datasource.password: root
+      spring.kafka.bootstrap-servers: kafka:29092
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - mysql-inventory-db
+      - kafka
+      - eureka-server
+
+  cart-service:
+    build:
+      context: ./cart-service
+      dockerfile: Dockerfile
+    container_name: cart_service
+    ports:
+      - "8006:8006"
+    environment:
+      spring.data.redis.host: redis
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - redis
+      - eureka-server
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification_service
+    ports:
+      - "8007:8007"
+    environment:
+      spring.kafka.bootstrap-servers: kafka:29092
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - kafka
+      - eureka-server
+
+  review-service:
+    build:
+      context: ./review-service
+      dockerfile: Dockerfile
+    container_name: review_service
+    ports:
+      - "8008:8008"
+    environment:
+      spring.datasource.url: jdbc:mysql://mysql-review-db:3306/shopsphere_review_db
+      spring.datasource.username: root
+      spring.datasource.password: root
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka/
+    networks:
+      - shopsphere-network
+    depends_on:
+      - mysql-review-db
+      - eureka-server
+
+  # Distributed Tracing - Zipkin
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - shopsphere-network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    networks:
+      - shopsphere-network
+    volumes:
+      - elasticsearch_volume:/usr/share/elasticsearch/data
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    networks:
+      - shopsphere-network
+    depends_on:
+      - elasticsearch
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.9.0
+    container_name: logstash
+    ports:
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    networks:
+      - shopsphere-network
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_volume:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - shopsphere-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    networks:
+      - shopsphere-network
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_volume:/var/lib/grafana
+
+volumes:
+  mysql_user_db_volume:
+  mysql_product_db_volume:
+  mysql_order_db_volume:
+  mysql_payment_db_volume:
+  mysql_inventory_db_volume:
+  mysql_review_db_volume:
+  redis_volume:
+  elasticsearch_volume:
+  prometheus_volume:
+  grafana_volume:
+
+networks:
+  shopsphere-network:
+    driver: bridge

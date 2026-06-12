@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive   # ✅ Add this
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      client:
+        simple:
+          enabled: false
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenish-rate: 10
+                redis-rate-limiter.burst-capacity: 20
+                redis-rate-limiter.requested-tokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: JwtAuthenticationFilter
+
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/products/**
+
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/orders/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+            - Path=/carts/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/payments/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/inventory/**
+  # ✅ Redis config for RequestRateLimiter
+  data:
+    redis:
+      host: localhost
+      port: 6379          
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+app:
+  security:
+    jwt:
+      secret: "your-secret-key-make-it-long-and-secure-at-least-32-characters"
+      expiration: 3600000
+      refresh-token-secret: "your-refresh-token-secret-key-make-it-long-and-secure"
+      refresh-token-expiration: 604800000
