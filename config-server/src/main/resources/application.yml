@@ -7,6 +7,9 @@ spring:
       server:
         git:
           uri: https://github.com/MilindMP/E-Commerse-ShopSphere.git
+          search-paths:
+            - cart-service/src/main/resources
+            - user-service/src/main/resources
           clone-on-start: true
 
 server:
