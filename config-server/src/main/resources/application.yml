@@ -1,9 +1,20 @@
-spring.application.name=config-server
-server.port=8888
+spring:
+  application:
+    name: config-server
 
-spring.cloud.config.server.git.uri=https://github.com/your-repo/config-repo
-spring.cloud.config.server.git.clone-on-start=true
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/MilindMP/E-Commerse-ShopSphere.git
+          clone-on-start: true
 
-eureka.client.register-with-eureka=true
-eureka.client.fetch-registry=true
-eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
+server:
+  port: 8888
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
