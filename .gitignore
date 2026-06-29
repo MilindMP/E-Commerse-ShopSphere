@@ -1,0 +1,111 @@
+# Compiled class files
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+bin/
+.DS_Store
+*.swp
+*.swo
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Gradle
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# Build
+build/
+dist/
+
+# Environment
+.env
+.env.local
+application-local.yml
+application-dev.yml
+
+# Logs
+logs/
+*.log
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if using any frontend tools)
+node_modules/
+npm-debug.log
+
+# Docker
+.docker/
+
+# Database files
+*.sql
+*.db
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# System
+.~*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Coverage
+jacoco-report/
+coverage/
+.coverage
+
+# IDE plugins
+.idea_modules/
+
+# Vim
+.*.sw[op]
+
+# Emacs
+*~
+.#*
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# Backup files
+*.backup
+*.original
+
+# Mac OS X
+._*
+.AppleDouble
+.LSOverride

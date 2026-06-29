@@ -1,10 +1,24 @@
-spring.application.name=notification-service
-server.port=8007
-spring.kafka.bootstrap-servers=localhost:9092
-eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
-spring.mail.host=smtp.gmail.com
-spring.mail.port=587
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-password
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: localhost:9092
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com
+    password: your-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8007
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
