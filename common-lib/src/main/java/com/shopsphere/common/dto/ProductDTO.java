@@ -15,6 +15,8 @@ public class ProductDTO implements Serializable {
     private String description;
     private BigDecimal price;
     private Integer quantity;
+    private String imageUrl;
+    private Integer stock;
     private String category;
     private Boolean active;
     private Long createdAt;
